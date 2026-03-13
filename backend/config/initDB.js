@@ -43,7 +43,7 @@ const initDB = async () => {
   CREATE TABLE IF NOT EXISTS recruiters(
   id SERIAL PRIMARY KEY,
   role user_role DEFAULT 'recruiter',
-  company_name VARCHAR(150),
+  name VARCHAR(100),
   email VARCHAR(150) UNIQUE,
   password TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -1,16 +1,17 @@
 import pool from "../config/db.js";
+import { JS, REC } from "../utils/role.js";
 
 export const upsertProfile = async (req, res) => {
     try {
         const userRole = req.user.role;
-        if (userRole !== "jobseeker") {
+        if (userRole !== JS) {
             return res.status(403).json({ message: "UNAUTHORIZED" });
         }
 
         const { phone, skills, experience } = req.body;
 
-        const resumeUrl = req.files?.resume ? req.files.resume[0].path : null;
-        const imageUrl = req.files?.image ? req.files.image[0].path : null;
+        const resumeUrl = req.files?.resume?.[0]?.path || null;
+        const imageUrl = req.files?.image?.[0]?.path || null;
 
         const user = await pool.query(
         `UPDATE users
@@ -42,14 +43,14 @@ export const upsertProfile = async (req, res) => {
 export const updateProfileImage = async (req, res) => {
     try {
         const userRole = req.user.role;
-        if (userRole !== "jobseeker") {
+        if (userRole !== JS) {
             return res.status(403).json({ message: "UNAUTHORIZED" });
         }
 
         if (!req.file) {
             return res.status(400).json({ message: "Image file is required" });
         }
-        const imageUrl = req.file.path;
+        const imageUrl = req.file?.path;
 
         const user = await pool.query(
         `UPDATE users

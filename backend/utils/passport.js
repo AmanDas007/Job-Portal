@@ -2,7 +2,6 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GithubStrategy } from "passport-github2";
 import pool from "../config/db.js";
-import { generateToken } from "./token.js";
 
 /* GOOGLE LOGIN */
 
@@ -47,10 +46,7 @@ passport.use(
 
         }
 
-        const token = generateToken(user.rows[0].id, user.rows[0].role);
-
-        done(null, { token });
-
+        done(null, user.rows[0]);
       } catch (err) {
         done(err, null);
       }
@@ -105,10 +101,7 @@ passport.use(
 
         }
 
-        const token = generateToken(user.rows[0].id, user.rows[0].role);
-
-        done(null, { token });
-
+        done(null, user.rows[0]);
       } catch (err) {
         done(err, null);
       }
