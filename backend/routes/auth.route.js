@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "../utils/passport.js";
 
-import { registerUser, loginUser, deleteAccount, authMe } from "../controllers/auth.controller.js";
+import { loginUser, authMe, logoutUser } from "../controllers/auth.controller.js";
 
 import authMiddleware from "../middlewares/auth.middleware.js";
 
@@ -9,10 +9,9 @@ import { generateToken } from "../utils/token.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/me", authMiddleware, authMe);
-router.delete("/delete", authMiddleware, deleteAccount);
+router.get("/logout", logoutUser);
 
 /* GOOGLE LOGIN */
 
@@ -51,27 +50,27 @@ router.get(
 router.get(
     "/github",
     passport.authenticate("github", { scope: ["user:email"] })
-  );
+);
   
-  router.get(
-    "/github/callback",
-    passport.authenticate("github", {
-      session: false,
-      failureRedirect: "http://localhost:5173/login"
-    }),
-    (req, res) => {
-  
-        const token = generateToken(req.user.id, req.user.role);
-    
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-    
-        res.redirect("http://localhost:5173/home");
-    }
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    session: false,
+    failureRedirect: "http://localhost:5173/login"
+  }),
+  (req, res) => {
+
+    const token = generateToken(req.user.id, req.user.role);
+
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.redirect("http://localhost:5173/home");
+  }
 );
 
 export default router;

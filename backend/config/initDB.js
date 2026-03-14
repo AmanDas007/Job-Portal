@@ -2,14 +2,6 @@ import pool from "./db.js";
 
 const initDB = async () => {
 
-  // await pool.query(`
-  //   CREATE TYPE IF NOT EXISTS user_role AS ENUM (
-  //     'jobseeker',
-  //     'recruiter',
-  //     'admin'
-  //   );
-  // `);
-
   await pool.query(`
     DO $$ 
     BEGIN

@@ -1,82 +1,54 @@
 import pool from "../config/db.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/token.js";
-import { JS, REC } from "../utils/role.js";
-
-// REGISTER USER
-export const registerUser = async (req, res) => {
-
-  try {
-    // for jobseeker only
-    const { name, email, password } = req.body;
-
-    const userExists = await pool.query(
-      "SELECT * FROM users WHERE email=$1",
-      [email]
-    );
-
-    if (userExists.rows.length > 0) {
-      return res.status(400).json({ message: "Account already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await pool.query(
-      "INSERT INTO users(name,email,password) VALUES($1,$2,$3) RETURNING id,name,email,role",
-      [name, email, hashedPassword]
-    );
-
-    const user = newUser.rows[0];
-
-    const token = generateToken(user.id, user.role);
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
-    });
-
-    res.json({
-      user: {
-        id: newUser.rows[0].id,
-        name: newUser.rows[0].name,
-        email: newUser.rows[0].email,
-        role: newUser.rows[0].role
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-
-};
+import { JS, REC, AD } from "../utils/role.js";
 
 // LOGIN USER
 export const loginUser = async (req, res) => {
-
   try {
-    // for jobseeker only
     const { email, password } = req.body;
 
-    const user = await pool.query(
-      "SELECT id,name,email,role FROM users WHERE email=$1",
+    // check jobseekers
+    let result = await pool.query(
+      "SELECT id,name,email,password,role FROM users WHERE email=$1",
       [email]
     );
 
-    if (user.rows.length === 0) {
-      return res.status(400).json({ message: "Email not exists" });
+    let user;
+
+    if (result.rows.length > 0) {
+      user = result.rows[0];
+    } else {
+
+      // check recruiters
+      const recruiter = await pool.query(
+        "SELECT id,name,email,password,role FROM recruiters WHERE email=$1",
+        [email]
+      );
+
+      if (recruiter.rows.length === 0) {
+        return res.status(400).json({
+          message: "Email not exists"
+        });
+      }
+
+      user = recruiter.rows[0];
     }
 
+    // check password
     const validPassword = await bcrypt.compare(
       password,
-      user.rows[0].password
+      user.password
     );
 
     if (!validPassword) {
-      return res.status(400).json({ message: "Wrong password" });
+      return res.status(400).json({
+        message: "Wrong password"
+      });
     }
 
-    const token = generateToken(user.rows[0].id, user.rows[0].role);
+    // generate token
+    const token = generateToken(user.id, user.role);
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -87,17 +59,17 @@ export const loginUser = async (req, res) => {
 
     res.json({
       user: {
-        id: user.rows[0].id,
-        name: user.rows[0].name,
-        email: user.rows[0].email,
-        role: user.rows[0].role
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       }
     });
-
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error"
+    });
   }
-
 };
 
 // AUTH ME
@@ -151,36 +123,5 @@ export const logoutUser = async (req, res) => {
     res.status(500).json({
       message: "Server error"
     });
-  }
-};
-
-// DELETE ACCOUNT
-export const deleteAccount = async (req, res) => {
-  try {
-    // for jobseeker only
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    if (userRole !== JS) {
-      return res.status(403).json({ message: "UNAUTHORIZED" });
-    }
-
-    await pool.query(
-      "DELETE FROM users WHERE id=$1",
-      [userId]
-    );
-
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict"
-    });
-
-    res.json({
-      message: "Account deleted successfully"
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
   }
 };

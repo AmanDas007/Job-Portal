@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 
 import initDB from "./config/initDB.js";
 import authRoutes from "./routes/auth.route.js";
-import profileRoutes from "./routes/profile.route.js";
+import jobseekerRoutes from "./routes/jobseeker.route.js"
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ initDB();
 
 /* Routes */
 app.use("/api/auth", authRoutes);
-app.use("/api/profile", profileRoutes);
+app.use("/api/user", jobseekerRoutes);
 
 /* Server */
 app.listen(process.env.PORT, () => {
