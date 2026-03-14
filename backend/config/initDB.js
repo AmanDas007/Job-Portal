@@ -24,12 +24,54 @@ const initDB = async () => {
   `);
 
   await pool.query(`
+    DO $$
+    BEGIN
+      CREATE TYPE job_type_enum AS ENUM (
+        'full-time',
+        'part-time',
+        'internship',
+        'contract'
+      );
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+  `);
+
+  await pool.query(`
+    DO $$
+    BEGIN
+      CREATE TYPE work_mode_enum AS ENUM (
+        'remote',
+        'onsite',
+        'hybrid'
+      );
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+  `);
+
+  await pool.query(`
+    DO $$
+    BEGIN
+      CREATE TYPE application_status_enum AS ENUM (
+        'applied',
+        'under_review',
+        'shortlisted',
+        'accepted',
+        'rejected'
+      );
+    EXCEPTION
+      WHEN duplicate_object THEN null;
+    END $$;
+  `);
+
+  await pool.query(`
   CREATE TABLE IF NOT EXISTS users(
   id SERIAL PRIMARY KEY,
   role user_role DEFAULT 'jobseeker',
-  name VARCHAR(100),
-  email VARCHAR(150) UNIQUE,
-  password TEXT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150) UNIQUE NOT NULL,
+  password TEXT NOT NULL,
   phone VARCHAR(20),
   skills TEXT,
   experience INTEGER,
@@ -44,22 +86,21 @@ const initDB = async () => {
       id SERIAL PRIMARY KEY,
       role user_role DEFAULT 'recruiter',
     
-      name VARCHAR(100),
-      email VARCHAR(150) UNIQUE,
-      password TEXT,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(150) UNIQUE NOT NULL,
+      password TEXT NOT NULL,
     
-      company_name VARCHAR(150),
-      company_website VARCHAR(200),
+      company_name VARCHAR(150) NOT NULL,
       company_logo TEXT,
-      company_description TEXT,
-      industry VARCHAR(100), 
+      industry VARCHAR(100),
     
       phone VARCHAR(20),
-      location VARCHAR(150),
     
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     `);
+
+    // for jobs: take company_name, company_logo, industry, phone from recruiters table
 
   await pool.query(`
   CREATE TABLE IF NOT EXISTS jobs (
@@ -67,15 +108,12 @@ const initDB = async () => {
 
       recruiter_id INTEGER NOT NULL,
 
-      role VARCHAR(150) NOT NULL,
-      title VARCHAR(200),
+      title VARCHAR(200) NOT NULL,
       description TEXT,
-
-      company_name VARCHAR(150),
       location VARCHAR(150),
 
-      job_type VARCHAR(50),
-      work_mode VARCHAR(50),
+      job_type job_type_enum NOT NULL,
+      work_mode work_mode_enum NOT NULL,
 
       experience_required INTEGER,
       skills_required TEXT,
@@ -83,9 +121,9 @@ const initDB = async () => {
       salary_min INTEGER,
       salary_max INTEGER,
 
-      openings INTEGER DEFAULT 1,
-
       application_deadline DATE,
+
+      is_active BOOLEAN DEFAULT true,
 
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -98,15 +136,14 @@ const initDB = async () => {
   await pool.query(`
   CREATE TABLE IF NOT EXISTS applications(
   id SERIAL PRIMARY KEY,
-  job_id INTEGER,
-  user_id INTEGER,
-  applicant_name VARCHAR(100),
-  applicant_email VARCHAR(150),
-  applicant_phone VARCHAR(20),
-  resume_url TEXT,
-  verification_status VARCHAR(20) DEFAULT 'pending',
-  application_status VARCHAR(20) DEFAULT 'pending',
+  job_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+
+  status application_status_enum DEFAULT 'applied',
+
   applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT unique_application UNIQUE(job_id, user_id),
 
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
