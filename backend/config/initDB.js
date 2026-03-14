@@ -40,15 +40,26 @@ const initDB = async () => {
   `);
 
   await pool.query(`
-  CREATE TABLE IF NOT EXISTS recruiters(
-  id SERIAL PRIMARY KEY,
-  role user_role DEFAULT 'recruiter',
-  name VARCHAR(100),
-  email VARCHAR(150) UNIQUE,
-  password TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  );
-  `);
+    CREATE TABLE IF NOT EXISTS recruiters(
+      id SERIAL PRIMARY KEY,
+      role user_role DEFAULT 'recruiter',
+    
+      name VARCHAR(100),
+      email VARCHAR(150) UNIQUE,
+      password TEXT,
+    
+      company_name VARCHAR(150),
+      company_website VARCHAR(200),
+      company_logo TEXT,
+      company_description TEXT,
+      industry VARCHAR(100), 
+    
+      phone VARCHAR(20),
+      location VARCHAR(150),
+    
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    `);
 
   await pool.query(`
   CREATE TABLE IF NOT EXISTS jobs (

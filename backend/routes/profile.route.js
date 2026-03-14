@@ -4,7 +4,8 @@ import upload from "../middlewares/upload.middleware.js";
 
 import {
   upsertProfile,
-  updateProfileImage
+  updateProfileImage,
+  deleteProfileImage
 } from "../controllers/profile.controller.js";
 
 const router = express.Router();
@@ -24,6 +25,12 @@ router.put(
   authMiddleware,
   upload.single("image"),
   updateProfileImage
+);
+
+router.delete(
+  "/image",
+  authMiddleware,
+  deleteProfileImage
 );
 
 export default router;

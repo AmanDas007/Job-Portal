@@ -7,6 +7,7 @@ import { JS, REC } from "../utils/role.js";
 export const registerUser = async (req, res) => {
 
   try {
+    // for jobseeker only
     const { name, email, password } = req.body;
 
     const userExists = await pool.query(
@@ -54,7 +55,7 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
 
   try {
-
+    // for jobseeker only
     const { email, password } = req.body;
 
     const user = await pool.query(
@@ -117,7 +118,7 @@ export const authMe = async (req, res) => {
         return res.json(user.rows[0]);
       } else if (userRole === REC) {
         const recruiter = await pool.query(
-          "SELECT id,role,name,email FROM recruiters WHERE id=$1",
+          "SELECT id, role, name, email, company_name, company_website, company_logo, company_description, industry, phone, location FROM recruiters WHERE id=$1",
           [req.user.id]
         );
     
@@ -155,10 +156,8 @@ export const logoutUser = async (req, res) => {
 
 // DELETE ACCOUNT
 export const deleteAccount = async (req, res) => {
-  // for jobseeker only currently
-
   try {
-
+    // for jobseeker only
     const userId = req.user.id;
     const userRole = req.user.role;
 

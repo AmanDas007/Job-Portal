@@ -14,6 +14,8 @@ router.post("/login", loginUser);
 router.get("/me", authMiddleware, authMe);
 router.delete("/delete", authMiddleware, deleteAccount);
 
+/* GOOGLE LOGIN */
+
 router.get(
     "/google",
     passport.authenticate("google", {
